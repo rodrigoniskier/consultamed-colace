@@ -1,0 +1,35 @@
+# Banco de dados de produção
+db.sqlite3
+db.sqlite3-*
+*.sqlite3
+
+# Arquivos enviados por usuários
+media/
+
+# Segredos e variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambientes virtuais
+venv/
+.venv/
+env/
+ENV/
+
+# Logs e temporários
+*.log
+*.tmp
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

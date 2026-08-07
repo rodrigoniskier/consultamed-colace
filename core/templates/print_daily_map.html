@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Mapa de Atendimento - {{ data }}</title>
+    <!-- Utilizando o Tailwind CSS para uma formatação elegante de impressão -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white text-slate-800 p-8 font-sans">
+
+    <!-- CABEÇALHO DO RELATÓRIO -->
+    <div class="border-b-2 border-slate-800 pb-4 mb-6 flex justify-between items-end">
+        <div>
+            <h1 class="text-2xl font-black uppercase">Mapa Diário de Atendimento</h1>
+            <p class="text-lg">Data Referência: <strong>{{ data }}</strong></p>
+            <p class="text-md text-slate-600 font-bold uppercase mt-1">Especialidade: {{ especialidade_nome }}</p>
+        </div>
+        <h2 class="text-xl font-bold text-blue-900">ConsultaMed</h2>
+    </div>
+
+    <!-- TABELA DE PACIENTES -->
+    <table class="w-full text-left border-collapse text-sm">
+        <thead>
+            <tr class="bg-slate-100 border-b-2 border-slate-300">
+                <th class="p-2">Hora/Turno</th>
+                <th class="p-2">Paciente / RG</th>
+                <th class="p-2">Tipo de Consulta</th>
+                <th class="p-2">Médico / Especialidade</th>
+                <th class="p-2">Status</th>
+                <!-- NOVA COLUNA PARA ASSINATURA -->
+                <th class="p-2 text-center w-48">Assinatura do Paciente</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in consultas %}
+            <tr class="border-b border-slate-200">
+                <td class="p-2 font-bold">
+                    {{ c.doctor_shift.turn }}<br>
+                    <span class="text-xs font-normal">Sala: {{ c.doctor_shift.room.name }}</span>
+                </td>
+
+                <td class="p-2 font-medium">
+                    {{ c.patient.full_name }}<br>
+                    <!-- ATUALIZADO: Adicionado o telefone ao lado do RG -->
+                    <span class="text-xs text-slate-500">RG: {{ c.patient.rg|default:"N/A" }} | Tel: {{ c.patient.phone|default:"N/A" }}</span>
+                </td>
+
+                <td class="p-2 uppercase text-xs font-bold">
+                    {{ c.get_appointment_type_display }}
+                </td>
+
+                <td class="p-2">
+                    Dr(a). {{ c.doctor.user.first_name }}<br>
+                    <span class="text-xs font-bold uppercase text-slate-500">{{ c.doctor_shift.specialty.name }}</span>
+                </td>
+
+                <td class="p-2 uppercase text-xs font-bold">{{ c.status }}</td>
+
+                <!-- ESPAÇO DESENHADO PARA A ASSINATURA À CANETA -->
+                <td class="p-2 align-bottom pb-4">
+                    <div class="border-b border-slate-400 w-full h-6"></div>
+                </td>
+            </tr>
+            {% empty %}
+            <!-- Ajuste do colspan de 5 para 6 para abranger a nova coluna -->
+            <tr><td colspan="6" class="p-4 text-center text-slate-500">Nenhuma consulta registrada para esta data.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- RODAPÉ DE VALIDAÇÃO -->
+    <div class="mt-8 text-xs text-center text-slate-500">
+        Gerado pelo Sistema ConsultaMed em {% now "d/m/Y H:i" %}
+    </div>
+
+    <!-- Script automático: Aciona a janela de impressão do navegador assim que a página carrega -->
+    <script>window.onload = function() { window.print(); }</script>
+</body>
+</html>

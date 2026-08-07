@@ -1,0 +1,75 @@
+<!-- Arquivo: consultamed/core/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Médico - ConsultaMed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen">
+    <header class="bg-white text-slate-800 shadow-sm border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <img src="/static/logo.png" alt="UNIPÊ" class="h-10 object-contain">
+            <h1 class="text-xl font-bold text-blue-900">ConsultaMed | Consultório</h1>
+        </div>
+        <div class="flex gap-4 items-center">
+            <span class="text-sm font-medium">Dr(a). {{ request.user.get_full_name }}</span>
+            <a href="/logout/" class="text-sm font-bold text-red-500 hover:text-red-700">Sair</a>
+        </div>
+    </header>
+
+    <main class="p-6 max-w-4xl mx-auto">
+        <h3 class="text-2xl font-bold text-slate-800 mb-6">Sua Agenda de Hoje</h3>
+
+        <div class="space-y-6">
+            {% for consulta in consultas %}
+                <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                    <!-- Cabeçalho do Card -->
+                    <div class="flex justify-between items-start mb-4 border-b pb-4">
+                        <div>
+                            <p class="font-bold text-slate-800 text-xl">{{ consulta.patient.full_name }}</p>
+                            <p class="text-sm text-slate-600 mt-1">Data: {{ consulta.appointment_date|date:"d/m/Y" }} às {{ consulta.appointment_time|time:"H:i" }}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-md text-xs font-bold uppercase
+                            {% if consulta.status == 'agendado' %} bg-blue-100 text-blue-700
+                            {% elif consulta.status == 'atendido' %} bg-green-100 text-green-700
+                            {% else %} bg-gray-200 text-gray-700 {% endif %}">
+                            {{ consulta.get_status_display }}
+                        </span>
+                    </div>
+
+                    <!-- Formulário de Prontuário e Status -->
+                    <form action="/update-appointment/{{ consulta.id }}/" method="POST" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1">Prontuário Médico (Evolução):</label>
+                            <textarea name="medical_notes" rows="3" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Digite as observações clínicas aqui...">{{ consulta.medical_notes|default:"" }}</textarea>
+                        </div>
+
+                        <div class="flex gap-3 justify-end items-center">
+                            <label class="text-sm font-bold text-slate-600">Status da Consulta:</label>
+                            <select name="status" class="p-2 border border-slate-300 rounded-lg text-sm bg-white">
+                                <option value="agendado" {% if consulta.status == 'agendado' %}selected{% endif %}>Agendado</option>
+                                <option value="atendido" {% if consulta.status == 'atendido' %}selected{% endif %}>Atendido</option>
+                                <option value="nao_compareceu" {% if consulta.status == 'nao_compareceu' %}selected{% endif %}>Não Compareceu</option>
+                            </select>
+
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                                Salvar Alterações
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% empty %}
+                <div class="text-center p-10 bg-white rounded-xl border border-dashed border-slate-300">
+                    <p class="text-slate-500 font-medium text-lg">Você não tem consultas agendadas.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+    <footer class="mt-auto py-6 w-full text-center text-sm font-medium text-slate-400 border-t border-slate-200 bg-white mt-10">
+        Desenvolvido por Prof. Rodrigo Niskier
+    </footer>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - ConsultaMed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Injetando a biblioteca Chart.js para os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col">
+
+    <header class="bg-blue-900 text-white shadow-md px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-4">
+            <div class="bg-white p-1 rounded-lg">
+                <img src="/static/logo.png" alt="UNIPÊ" class="h-10 object-contain">
+            </div>
+            <div>
+                <h1 class="text-2xl font-black tracking-tight">ConsultaMed <span class="font-light">AppAdmin</span></h1>
+                <p class="text-blue-200 text-xs uppercase font-bold">Gestão Completa da Clínica</p>
+            </div>
+        </div>
+        <a href="/logout/" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Sair</a>
+    </header>
+
+    <main class="flex-grow p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- ================= NOVO: PAINEL ANALÍTICO ================= -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-2">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">📊 Desempenho e Estatísticas</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Gráfico de Status -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Taxa de Comparecimento</h3>
+                    <div class="relative w-full max-w-[250px] aspect-square">
+                        <canvas id="graficoStatus"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Especialidades -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">Volume por Especialidade</h3>
+                    <div class="relative w-full">
+                        <canvas id="graficoEspecialidades"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- CAIXA DE ENTRADA: MENSAGENS E ARQUIVOS -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">📥 Caixa de Entrada (Recepção)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for msg in mensagens_recepcao %}
+                <!-- ADICIONADO: class "relative" para podermos posicionar o botão X no canto -->
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative pr-10">
+
+                    <!-- NOVO: Botão de Excluir -->
+                    <form action="/delete-message/{{ msg.id }}/" method="POST" class="absolute top-3 right-3">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('Deseja excluir definitivamente esta mensagem e seu anexo?')" class="text-red-400 hover:text-red-600 transition" title="Excluir Mensagem">
+                            ❌
+                        </button>
+                    </form>
+
+                    <p class="text-xs text-blue-500 font-bold mb-1">{{ msg.created_at|date:"d/m/Y H:i" }} - Enviado por: {{ msg.sender.user.first_name }}</p>
+                    <p class="text-slate-700 text-sm mb-3">{{ msg.text_content }}</p>
+
+                    {% if msg.attached_file %}
+                        <a href="{{ msg.attached_file.url }}" target="_blank" class="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded hover:bg-blue-700">📎 Ver Anexo</a>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-slate-500 text-sm">Nenhuma mensagem recebida.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RELATÓRIOS DE FECHAMENTO DIÁRIO -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">📑 Relatórios de Fechamento de Caixa/Dia</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 border-b">
+                        <tr>
+                            <th class="px-4 py-2">Data do Relatório</th>
+                            <th class="px-4 py-2">Total Agendado</th>
+                            <th class="px-4 py-2 text-green-600">Compareceram</th>
+                            <th class="px-4 py-2 text-red-600">Faltaram</th>
+                            <th class="px-4 py-2">Responsável</th>
+                            <th class="px-4 py-2 text-center">Ações</th> <!-- NOVA COLUNA ADICIONADA -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rel in relatorios_diarios %}
+                        <tr class="border-b hover:bg-slate-50 transition">
+                            <td class="px-4 py-2 font-bold">{{ rel.report_date|date:"d/m/Y" }}</td>
+                            <td class="px-4 py-2 font-bold">{{ rel.total_scheduled }}</td>
+                            <td class="px-4 py-2 text-green-600 font-bold">{{ rel.total_attended }}</td>
+                            <td class="px-4 py-2 text-red-600 font-bold">{{ rel.total_missed }}</td>
+                            <td class="px-4 py-2">{{ rel.generated_by.user.first_name }}</td>
+                            <td class="px-4 py-2 text-center">
+                                <!-- NOVO: Formulário e Botão de Excluir Relatório -->
+                                <form action="/delete-report/{{ rel.id }}/" method="POST" class="inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir este relatório de fechamento?')" class="text-red-400 hover:text-red-600 transition p-1" title="Excluir Relatório">
+                                        ❌
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <!-- O colspan mudou de 5 para 6 para alinhar com a nova coluna -->
+                        <tr><td colspan="6" class="px-4 py-4 text-center">Nenhum relatório gerado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+       <!-- AGENDA GLOBAL DO ADMIN -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-4">📅 Lista de Pacientes Agendados (Global)</h2>
+            <div class="overflow-x-auto h-96">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 border-b sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2">Data/Turno</th>
+                            <th class="px-3 py-2">Paciente</th>
+                            <th class="px-3 py-2">Tipo</th>
+                            <th class="px-3 py-2">Médico/Espec.</th>
+                            <th class="px-3 py-2">Local/Sala</th>
+                            <th class="px-3 py-2">Status</th>
+                            <th class="px-3 py-2 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in agendamentos_globais %}
+                        <!-- Formulários ocultos amarrados ao ID do agendamento -->
+                        <form id="edit-app-{{ c.id }}" action="/admin-update-appointment/{{ c.id }}/" method="POST">{% csrf_token %}</form>
+                        <form id="del-app-{{ c.id }}" action="/admin-delete-appointment/{{ c.id }}/" method="POST">{% csrf_token %}</form>
+
+                        <tr class="border-b hover:bg-slate-50 transition">
+                            <td class="px-3 py-2 font-bold">{{ c.appointment_date|date:"d/m/Y" }}<br><span class="text-xs font-normal text-slate-500">{{ c.doctor_shift.turn }}</span></td>
+                            <td class="px-3 py-2 font-medium">{{ c.patient.full_name }}</td>
+
+                            <!-- Campo Editável: Tipo de Consulta -->
+                            <td class="px-3 py-2 text-xs">
+                                <select name="appointment_type" form="edit-app-{{ c.id }}" class="p-1 border border-slate-300 rounded text-xs outline-none focus:border-blue-500">
+                                    <option value="primeira_vez" {% if c.appointment_type == 'primeira_vez' %}selected{% endif %}>Primeira Vez</option>
+                                    <option value="retorno" {% if c.appointment_type == 'retorno' %}selected{% endif %}>Retorno</option>
+                                    <option value="encaminhamento" {% if c.appointment_type == 'encaminhamento' %}selected{% endif %}>Encaminhamento</option>
+                                </select>
+                            </td>
+
+                            <td class="px-3 py-2 text-xs text-slate-700 font-medium">Dr(a). {{ c.doctor.user.first_name }}<br><span class="text-[10px] uppercase text-slate-400 font-bold">{{ c.doctor_shift.specialty.name }}</span></td>
+                            <td class="px-3 py-2 text-xs text-slate-700">{{ c.doctor_shift.room.location.name }}<br><span class="text-[10px] uppercase text-slate-400 font-bold">{{ c.doctor_shift.room.name }}</span></td>
+
+                            <!-- Campo Editável: Status -->
+                            <td class="px-3 py-2 text-xs">
+                                <select name="status" form="edit-app-{{ c.id }}" class="p-1 border border-slate-300 rounded text-xs outline-none focus:border-blue-500 font-bold">
+                                    <option value="agendado" {% if c.status == 'agendado' %}selected{% endif %}>Agendado</option>
+                                    <option value="atendido" {% if c.status == 'atendido' %}selected{% endif %}>Atendido</option>
+                                    <option value="nao_compareceu" {% if c.status == 'nao_compareceu' %}selected{% endif %}>Faltou</option>
+                                    <option value="cancelado" {% if c.status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                                </select>
+                            </td>
+
+                            <!-- Botões de Ação -->
+                            <td class="px-3 py-2 text-center">
+                                <div class="flex gap-2 justify-center items-center mt-1">
+                                    <button type="submit" form="edit-app-{{ c.id }}" class="bg-blue-600 text-white px-2 py-1.5 rounded text-xs font-bold hover:bg-blue-700 shadow-sm" title="Salvar Alterações">💾</button>
+                                    <button type="submit" form="del-app-{{ c.id }}" onclick="return confirm('ATENÇÃO: Deseja excluir definitivamente este agendamento? O paciente será removido e a vaga retornará ao calendário da recepção.')" class="bg-red-500 text-white px-2 py-1.5 rounded text-xs font-bold hover:bg-red-700 shadow-sm" title="Excluir Agendamento">❌</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="px-4 py-4 text-center text-slate-500">Nenhum paciente agendado até o momento no banco de dados global.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GERAR MAPA DE ATENDIMENTO -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow border border-blue-200">
+            <h2 class="text-xl font-bold text-blue-900 mb-4">🖨️ Imprimir Mapa de Atendimento Diário</h2>
+            <form action="/print-map/" method="GET" target="_blank" class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="w-full md:w-auto">
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Selecione a Data</label>
+                    <input type="date" name="date" required class="w-full mt-1 p-3 border border-slate-300 rounded-xl bg-slate-50">
+                </div>
+                <button type="submit" class="w-full md:w-auto bg-slate-800 hover:bg-black text-white font-bold py-3 px-6 rounded-xl shadow-md">
+                    Gerar PDF / Imprimir
+                </button>
+            </form>
+        </div>
+
+        <!-- CADASTRAR MÉDICO -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">👨‍⚕️ Novo Médico</h2>
+            <form action="/add-doctor/" method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="text" name="first_name" required placeholder="Nome do Médico" class="w-full p-2 border border-slate-300 rounded-lg">
+                <input type="text" name="username" required placeholder="Nome de Login (Ex: dr.joao)" class="w-full p-2 border border-slate-300 rounded-lg">
+                <input type="password" name="password" required placeholder="Senha de Acesso" class="w-full p-2 border border-slate-300 rounded-lg">
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">Salvar Médico</button>
+            </form>
+        </div>
+
+        <!-- CADASTRAR ESPECIALIDADE E LOCAL -->
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-4">⭐ Nova Especialidade</h2>
+                <form action="/add-specialty/" method="POST" class="flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="name" required placeholder="Ex: Cardiologia" class="w-full p-2 border border-slate-300 rounded-lg">
+                    <button type="submit" class="bg-blue-600 text-white px-4 rounded-lg font-bold">+</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-4">📍 Novo Local</h2>
+                <form action="/add-location/" method="POST" class="flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="name" required placeholder="Ex: Prédio Anexo" class="w-full p-2 border border-slate-300 rounded-lg">
+                    <button type="submit" class="bg-blue-600 text-white px-4 rounded-lg font-bold">+</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- CADASTRAR CONSULTÓRIO / SALA -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold text-slate-800 mb-4">🚪 Novo Consultório</h2>
+            <form action="/add-room/" method="POST" class="space-y-3">
+                {% csrf_token %}
+                <input type="text" name="name" required placeholder="Nome (Ex: Sala 01)" class="w-full p-2 border border-slate-300 rounded-lg text-sm">
+
+                <select name="location_id" required class="w-full p-2 border border-slate-300 rounded-lg text-sm">
+                    <option value="">Selecione o Local...</option>
+                    {% for l in locais %}<option value="{{ l.id }}">{{ l.name }}</option>{% endfor %}
+                </select>
+
+                <select name="specialty_id" class="w-full p-2 border border-slate-300 rounded-lg text-sm">
+                    <option value="">Especialidade (Opcional)</option>
+                    {% for e in especialidades %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+                </select>
+
+                <select name="doctor_id" class="w-full p-2 border border-slate-300 rounded-lg text-sm">
+                    <option value="">Médico Fixo (Opcional)</option>
+                    {% for m in medicos %}<option value="{{ m.id }}">{{ m.user.get_full_name }}</option>{% endfor %}
+                </select>
+
+                <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg">Salvar Sala</button>
+            </form>
+        </div>
+
+        <!-- CADASTRAR VAGAS -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">🛠️ Liberar Vagas no Sistema</h2>
+            <form action="/create-shift/" method="POST" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                {% csrf_token %}
+                <input type="date" name="shift_date" required class="col-span-1 p-3 border border-slate-300 rounded-xl text-sm">
+                <select name="turn" required class="col-span-1 p-3 border border-slate-300 rounded-xl text-sm">
+                    <option value="MANHÃ">Manhã</option><option value="TARDE">Tarde</option><option value="NOITE">Noite</option>
+                </select>
+                <select name="doctor_id" required class="col-span-1 p-3 border border-slate-300 rounded-xl text-sm">
+                    <option value="">Médico...</option>{% for m in medicos %}<option value="{{ m.id }}">{{ m.user.get_full_name }}</option>{% endfor %}
+                </select>
+                <select name="specialty_id" required class="col-span-1 p-3 border border-slate-300 rounded-xl text-sm">
+                    <option value="">Especialidade...</option>{% for e in especialidades %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}
+                </select>
+                <select name="room_id" required class="col-span-1 p-3 border border-slate-300 rounded-xl text-sm">
+                    <option value="">Sala...</option>{% for r in salas %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+                </select>
+                <input type="number" name="vagas_totais" required min="1" value="10" title="Vagas" class="col-span-1 p-3 border-2 border-blue-300 rounded-xl font-bold text-blue-800 text-sm">
+
+                <button type="submit" class="col-span-1 md:col-span-6 bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition">Gerar Grade</button>
+            </form>
+        </div>
+        <!-- GESTÃO DE GRADES DE VAGAS (TURNOS GERADOS) -->
+        <div class="col-span-1 md:col-span-2 lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-2">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">⚙️ Gestão de Grades de Vagas (Turnos Gerados)</h2>
+            <div class="overflow-x-auto h-96">
+                <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 border-b sticky top-0 z-10">
+                        <tr>
+                            <th class="px-3 py-2">Data</th>
+                            <th class="px-3 py-2">Turno</th>
+                            <th class="px-3 py-2">Médico / Especialidade</th>
+                            <th class="px-3 py-2">Sala</th>
+                            <th class="px-3 py-2 text-center">Vagas Totais</th>
+                            <th class="px-3 py-2 text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for turno in turnos_recentes %}
+                        <!-- Formulários ocultos, associados pelo ID HTML5 -->
+                        <form id="edit-shift-{{ turno.id }}" action="/update-shift/{{ turno.id }}/" method="POST">{% csrf_token %}</form>
+                        <form id="del-shift-{{ turno.id }}" action="/delete-shift/{{ turno.id }}/" method="POST">{% csrf_token %}</form>
+
+                        <tr class="border-b hover:bg-slate-50 transition">
+                            <td class="px-3 py-2">
+                                <input type="date" name="shift_date" form="edit-shift-{{ turno.id }}" value="{{ turno.shift_date|date:'Y-m-d' }}" required class="p-2 border border-slate-300 rounded text-xs w-full outline-none focus:border-blue-500">
+                            </td>
+                            <td class="px-3 py-2">
+                                <select name="turn" form="edit-shift-{{ turno.id }}" required class="p-2 border border-slate-300 rounded text-xs w-full outline-none focus:border-blue-500">
+                                    <option value="MANHÃ" {% if turno.turn == 'MANHÃ' %}selected{% endif %}>Manhã</option>
+                                    <option value="TARDE" {% if turno.turn == 'TARDE' %}selected{% endif %}>Tarde</option>
+                                    <option value="NOITE" {% if turno.turn == 'NOITE' %}selected{% endif %}>Noite</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2 text-xs font-medium text-slate-700">
+                                Dr(a). {{ turno.doctor.user.first_name }}<br>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold">{{ turno.specialty.name }}</span>
+                            </td>
+                            <td class="px-3 py-2 text-xs text-slate-700">
+                                {{ turno.room.location.name }}<br>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold">{{ turno.room.name }}</span>
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                <input type="number" name="vagas_totais" form="edit-shift-{{ turno.id }}" value="{{ turno.vagas_totais }}" min="1" required class="p-2 border border-slate-300 rounded text-xs w-20 text-center font-black text-blue-800 outline-none focus:border-blue-500">
+                            </td>
+                            <td class="px-3 py-2 text-center">
+                                <div class="flex gap-2 justify-center items-center h-full mt-1">
+                                    <button type="submit" form="edit-shift-{{ turno.id }}" class="bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 shadow-sm" title="Salvar Alterações">💾</button>
+                                    <button type="submit" form="del-shift-{{ turno.id }}" onclick="return confirm('ATENÇÃO: Deseja excluir definitivamente esta grade de vagas?')" class="bg-red-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-red-700 shadow-sm" title="Excluir Grade">❌</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="px-4 py-4 text-center">Nenhuma grade de vagas gerada no histórico.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-6 w-full text-center text-sm font-medium text-slate-400 border-t border-slate-200 bg-white">
+        Desenvolvido por Prof. Rodrigo Niskier
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT PARA RENDERIZAR OS GRÁFICOS -->
+    <script>
+        // Carrega os dados seguros que o Python preparou em JSON
+        const statusLabels = JSON.parse('{{ grafico_status_labels|escapejs }}');
+        const statusData = JSON.parse('{{ grafico_status_data|escapejs }}');
+
+        const espLabels = JSON.parse('{{ grafico_esp_labels|escapejs }}');
+        const espData = JSON.parse('{{ grafico_esp_data|escapejs }}');
+
+        // Configuração do Gráfico de Status (Gráfico de Rosca / Doughnut)
+        const ctxStatus = document.getElementById('graficoStatus').getContext('2d');
+        new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    // Cores: Verde (Atendido), Azul (Agendado), Vermelho (Cancelado), Cinza (Faltou)
+                    backgroundColor: ['#3b82f6', '#22c55e', '#ef4444', '#64748b'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // Configuração do Gráfico de Especialidades (Gráfico de Barras)
+        const ctxEsp = document.getElementById('graficoEspecialidades').getContext('2d');
+        new Chart(ctxEsp, {
+            type: 'bar',
+            data: {
+                labels: espLabels,
+                datasets: [{
+                    label: 'Consultas Registradas',
+                    data: espData,
+                    backgroundColor: '#1e3a8a', // Azul escuro do UNIPÊ
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                },
+                plugins: {
+                    legend: { display: false } // Esconde a legenda para ficar mais limpo
+                }
+            }
+        });
+    </script>
+</body>
+</html>

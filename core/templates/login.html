@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - ConsultaMed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<!-- 1. Ajustamos o body para ser uma coluna flexível -->
+<body class="bg-slate-50 font-sans min-h-screen flex flex-col">
+
+    <!-- 2. Criamos o contêiner principal com flex-grow.
+         Ele ocupa todo o espaço livre, centralizando o login e empurrando o rodapé para baixo. -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+            <!-- Cabeçalho -->
+            <div class="text-center mb-8">
+            <img src="/static/logo.png" alt="UNIPÊ" class="h-20 mx-auto mb-4 object-contain">
+            <h1 class="text-3xl font-extrabold text-blue-900 mb-2">ConsultaMed</h1>
+            <p class="text-slate-500 font-medium">Acesse o sistema do seu consultório</p>
+        </div>
+
+            <!-- O formulário envia os dados no método POST nativo do Django -->
+            <form method="POST" class="space-y-6">
+                {% csrf_token %} <!-- Etiqueta de segurança obrigatória -->
+
+                <!-- Campo: Usuário -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Usuário</label>
+                    <input type="text" name="username" required
+                           class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none"
+                           placeholder="Digite seu nome de usuário">
+                </div>
+
+                <!-- Campo: Senha -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Senha</label>
+                    <input type="password" name="password" required
+                           class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition outline-none"
+                           placeholder="••••••••">
+                </div>
+
+                <!-- Exibição de Erros (Caso a senha esteja incorreta) -->
+                {% if form.errors %}
+                    <div class="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-200 text-center">
+                        Usuário ou senha inválidos. Tente novamente.
+                    </div>
+                {% endif %}
+
+                <!-- Botão de Acesso -->
+                <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-xl transition duration-300 shadow-md">
+                    Entrar no Sistema
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- 3. Rodapé posicionado no final da tela sem margens extras atrapalhando -->
+    <footer class="py-6 w-full text-center text-sm font-medium text-slate-400 border-t border-slate-200 bg-white">
+        Desenvolvido por Prof. Rodrigo Niskier
+    </footer>
+
+</body>
+</html>
