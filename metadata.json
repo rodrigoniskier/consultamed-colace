@@ -1,0 +1,8 @@
+{
+  "name": "COLACE - Agendamento",
+  "description": "Sistema de agendamento da rede COLACE, com fluxos de secretaria e acompanhamento médico em tempo real.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "COLACE - Agendamento",
+  "short_name": "COLACE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "description": "Sistema de agendamento da rede COLACE"
+}
