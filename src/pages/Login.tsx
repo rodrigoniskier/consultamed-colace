@@ -49,10 +49,10 @@ export function Login() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-100 relative z-10">
         <div className="bg-[#03305D] p-8 text-center flex flex-col items-center border-b-4 border-[#FCA311]">
           <div className="bg-white p-3 rounded-xl mb-4 w-28 h-28 flex items-center justify-center shadow-inner">
-            <img src="/logo.svg" alt="UNIPÊ Logo" className="max-w-full max-h-full object-contain" />
+            <img src="/logo.svg" alt="COLACE Logo" className="max-w-full max-h-full object-contain" />
           </div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">Medicina <span className="text-[#FCA311]">UNIPÊ</span></h2>
-          <p className="text-blue-100 mt-2 text-sm font-medium">Agendamento de Consultas do Internato</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight">COLACE</h2>
+          <p className="text-blue-100 mt-2 text-sm font-medium">Sistema de Agendamento de Consultas</p>
         </div>
         
         <form onSubmit={handleLogin} className="p-8">

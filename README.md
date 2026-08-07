@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# COLACE - Sistema de Agendamento
 
-# Run and deploy your AI Studio app
+Sistema web/PWA de agendamento para a rede COLACE, derivado do projeto ConsultaMed e mantido em repositório independente.
 
-This contains everything you need to run your app locally.
+## Stack
 
-View your app in AI Studio: https://ai.studio/apps/550a9b33-e06f-40bd-8c38-876f05d11bde
+- React 19 + TypeScript
+- Vite
+- Supabase (autenticação e banco)
+- Tailwind CSS
 
-## Run Locally
+## Configuração
 
-**Prerequisites:**  Node.js
+Copie `.env.example` para `.env.local` e informe **exclusivamente** as credenciais do projeto Supabase da COLACE:
 
+```bash
+cp .env.example .env.local
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Variáveis essenciais:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+
+Não reutilize as credenciais do ConsultaMed original se as duas redes precisarem manter usuários, pacientes e agendas isolados.
+
+## Desenvolvimento
+
+```bash
+npm ci
+npm run dev
+```
+
+## Build de produção
+
+```bash
+npm run build
+```
+
+O resultado é gerado em `dist/`.
+
+## PythonAnywhere
+
+Consulte `PYTHONANYWHERE-COLACE.md` para o checklist específico de implantação.

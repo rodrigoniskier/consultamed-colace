@@ -97,7 +97,7 @@ export function DoctorDashboard() {
       {/* Mobile Top Navbar */}
       <header className="bg-white text-slate-800 shadow-sm border-b border-slate-200 rounded-b-2xl px-6 py-4 flex justify-between items-center sticky top-0 z-10 w-full">
         <div className="flex flex-col gap-2">
-          <img src="/logo.svg" alt="UNIPÊ Logo" className="h-8 object-contain object-left" />
+          <img src="/logo.svg" alt="COLACE Logo" className="h-8 object-contain object-left" />
           <h1 className="text-xl font-bold">Dr(a). {profile?.full_name?.split(' ')[0]}</h1>
         </div>
         <button onClick={signOut} className="p-2 text-slate-500 hover:text-red-500 hover:bg-slate-50 rounded-full transition">

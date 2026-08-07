@@ -240,8 +240,8 @@ export function SecretaryDashboard() {
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-10 shadow-sm print:hidden">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4">
-            <img src="/logo.svg" alt="UNIPÊ Logo" className="h-10 object-contain" />
-            <span className="font-bold text-xl tracking-tight text-slate-800">Medicina - UNIPÊ</span>
+            <img src="/logo.svg" alt="COLACE Logo" className="h-10 object-contain" />
+            <span className="font-bold text-xl tracking-tight text-slate-800">COLACE - Rede de Clínicas</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-500">
             <button onClick={() => setView('agendamentos')} className={view === 'agendamentos' ? "text-blue-600 border-b-2 border-blue-600 py-5" : "hover:text-slate-800 transition-colors py-5"}>Agenda Global</button>
