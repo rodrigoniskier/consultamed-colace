@@ -211,12 +211,16 @@ def schedule_appointment(request):
         turno_vaga = get_object_or_404(DoctorShift, id=request.POST.get('shift_id'))
 
         tipo_consulta = request.POST.get('appointment_type')
-        notas = ""
+        ficha_fisica = request.POST.get('has_previous_record')
+        if ficha_fisica not in ('sim', 'nao'):
+            return redirect('dashboard')
+
+        notas_partes = [f"Ficha/prontuário físico: {'SIM' if ficha_fisica == 'sim' else 'NÃO'}"]
         has_ref = False
 
         if tipo_consulta == 'encaminhamento':
             has_ref = True
-            notas = f"Encaminhado por: {request.POST.get('referred_by', '')}"
+            notas_partes.append(f"Encaminhado por: {request.POST.get('referred_by', '')}")
             tipo_salvo = 'primeira_vez'
         else:
             tipo_salvo = tipo_consulta
@@ -230,7 +234,7 @@ def schedule_appointment(request):
             status='agendado',
             appointment_type=tipo_salvo,
             has_referral=has_ref,
-            secretary_notes=notas
+            secretary_notes=" | ".join(notas_partes)
         )
     return redirect('dashboard')
 
