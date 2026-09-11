@@ -54,7 +54,21 @@
                     <span class="text-xs font-bold uppercase text-slate-500">{{ c.doctor_shift.specialty.name }}</span>
                 </td>
 
-                <td class="p-2 uppercase text-xs font-bold">{{ c.status }}</td>
+                <td class="p-2 uppercase text-xs font-bold">
+                    {% if c.status == 'agendado' %}
+                        {% if c.secretary_notes and "Ficha/prontuário físico: SIM" in c.secretary_notes %}
+                            Tem ficha
+                        {% elif c.secretary_notes and "Ficha/prontuário físico: NÃO" in c.secretary_notes %}
+                            Não tem ficha
+                        {% elif c.patient and c.patient.has_previous_record %}
+                            Tem ficha
+                        {% else %}
+                            Não tem ficha
+                        {% endif %}
+                    {% else %}
+                        {{ c.get_status_display }}
+                    {% endif %}
+                </td>
 
                 <!-- ESPAÇO DESENHADO PARA A ASSINATURA À CANETA -->
                 <td class="p-2 align-bottom pb-4">
